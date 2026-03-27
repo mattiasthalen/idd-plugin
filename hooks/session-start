@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+context=""
+
+# Check if .idd/ exists (IDD is initialized)
+if [ -d ".idd" ]; then
+
+  # Check CLAUDE.md freshness
+  if [ -f "CLAUDE.md" ]; then
+    last_modified=$(stat -c %Y "CLAUDE.md" 2>/dev/null || stat -f %m "CLAUDE.md" 2>/dev/null || echo "0")
+    now=$(date +%s)
+    days_old=$(( (now - last_modified) / 86400 ))
+    if [ "$days_old" -ge 7 ]; then
+      context="${context}⚠ CLAUDE.md hasn't been updated in ${days_old} days. Consider running idd:learn to refresh project context.\n"
+    fi
+  fi
+
+  # Count active intents
+  if command -v gh &>/dev/null && gh repo view --json name &>/dev/null 2>&1; then
+    # GitHub mode
+    intent_count=$(gh issue list --label "intent" --state open --json number --jq 'length' 2>/dev/null || echo "0")
+    if [ "$intent_count" -gt 0 ]; then
+      context="${context}📋 ${intent_count} active intent(s) in GitHub Issues.\n"
+    fi
+  elif [ -d ".idd/intent-queue" ]; then
+    # Local mode
+    intent_count=$(find .idd/intent-queue -name "INTENT-*.md" 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$intent_count" -gt 0 ]; then
+      context="${context}📋 ${intent_count} active intent(s) in local queue.\n"
+    fi
+  fi
+
+fi
+
+# Output JSON for Claude Code
+if [ -n "$context" ]; then
+  printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}' "$context"
+fi
