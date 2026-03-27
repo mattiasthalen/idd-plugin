@@ -1,0 +1,11 @@
+{
+  "name": "idd",
+  "description": "Intent-Driven Development framework — interactive skills for the 5-phase IDD loop: intent, generate, evaluate, decide, learn.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Mattias Thalén"
+  },
+  "repository": "https://github.com/mattiasthalen/idd-plugin",
+  "license": "MIT",
+  "keywords": ["idd", "intent-driven-development", "methodology", "ai-native"]
+}
